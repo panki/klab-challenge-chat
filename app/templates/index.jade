@@ -1,0 +1,26 @@
+html
+  head
+    title Chat
+    meta(name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no")
+    link(href="/public/favicon.png" rel="icon" type="image/png")
+    script(type='text/javascript', src='public/socket.js')
+    script(type='text/javascript', src='http://code.jquery.com/jquery-2.1.3.min.js')
+    script(type='text/javascript', src='public/client.js')
+  body
+    div
+      input#serverUrl(value="127.0.0.1:8080")
+      button#connect Connect
+    br
+    #messages(style="height:300px; overflow:auto")
+    br
+    #setup
+      input#nickname(value="person1")
+      button#setNick Set nickname
+      input#channel(value="defaultChannel")
+      button#joinChannel Join
+    br
+    #sender
+      input#message(value="message1", size=100)
+      button#sendMsg Send message
+    br
+    #wsstatus
