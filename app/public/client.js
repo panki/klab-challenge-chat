@@ -12,38 +12,27 @@ jQuery(document).ready(init);
 
 
 function init() {
-	jQuery('#sendMsg').on(
-		'click',
-		function() {
+	jQuery('#sendMsg').on('click', function() {
 			sendMsg(jQuery('#message').val());
-		}
-	);
-	jQuery('#setNick').on(
-		'click',
-		setNick
-	);
-	jQuery('#joinChannel').on(
-		'click',
-		joinChannel
-	);
-	jQuery('#connect').on(
-		'click',
-		function(e) {
-			if (typeof codeTest.client !== null) {
-				delete codeTest.client;
-			}
-			codeTest.config.server = jQuery('#serverUrl').val();
-			codeTest.client = setupSocket();
-		}
-	);
-	drawMessage({ author:'system', channel: codeTest.channel, text: 'welcome to the test', timestamp: new Date().toLocaleTimeString() });
+  });
+	jQuery('#setNick').on('click', setNick);
+	jQuery('#joinChannel').on('click', joinChannel);
+	jQuery('#connect').on('click', function(e) {
+    if (typeof codeTest.client !== null) {
+      delete codeTest.client;
+    }
+    codeTest.config.server = jQuery('#serverUrl').val();
+    codeTest.client = setupSocket();
+  });
+	drawMessage({ author:'system', channel: codeTest.channel, text: 'welcome to the test', timestamp: new Date() });
 };
 
 
 function joinChannel() {
 	var channel = jQuery('#channel').val();
 	jQuery('#messages').empty();codeTest.channel = channel;
-	drawMessage({ author:'system', channel: codeTest.channel, text: 'welcome to a new channel (' + channel + '), ' + codeTest.nickName, timestamp: new Date().toLocaleTimeString() });
+	drawMessage({ author:'system', channel: codeTest.channel, text: 'welcome to a new channel (' + channel + '), ' + codeTest.nickName, timestamp: new Date() });
+	send2server('join', { channel: channel });
 	return codeTest.channel;
 };
 
@@ -51,7 +40,8 @@ function joinChannel() {
 function setNick() {
 	var nick = jQuery('#nickname').val();
 	codeTest.nickName = nick;
-	drawMessage({ author:'system', channel: codeTest.channel, text: 'greetings, ' + nick + '!', timestamp: new Date().toLocaleTimeString() });
+	drawMessage({ author:'system', channel: codeTest.channel, text: 'greetings, ' + nick + '!', timestamp: new Date() });
+	send2server('nick', { nick: nick });
 	return codeTest.nickName;
 };
 
@@ -62,7 +52,7 @@ function sendMsg(text) {
 		channel: codeTest.channel,
 		text: text
 	};
-	drawMessage({ author:'YOU', channel: data.channel, text: data.text, timestamp: new Date().toLocaleTimeString() });
+	drawMessage({ author:'YOU', channel: data.channel, text: data.text, timestamp: new Date() });
 	return send2server('msg', data);
 };
 
@@ -71,13 +61,7 @@ function send2server(command, data) {
 	return codeTest.client.send(
 		{
 			command:command,
-			data: [
-				{
-					author: codeTest.nickName,
-					channel: codeTest.channel,
-					text: data.text
-				}
-			]
+			data: data
 		}
 	);
 };
@@ -85,17 +69,17 @@ function send2server(command, data) {
 
 function handleMessageFromServer(msg) {
 	if (typeof msg.command !== 'undefined' && typeof msg.data !== 'undefined') {
-		if (msg.command === 'messages') {
-			for (var n=0; n<msg.data; n+=1) {
-				drawMessage(msg.data[n]);
-			}
+		if (msg.command === 'msg') {
+			drawMessage(msg.data);
 		}
 	}
 };
 
 
 function drawMessage(data) {
-	var msgString = '<span>{' + data.channel + '@' + data.timestamp + '} [' + data.author + '] ' + data.text + '</span><br/>';
+  console.log(data)
+  var timestamp = data.timestamp ? ( typeof data.timestamp == 'string' ? new Date(data.timestamp) : data.timestamp ) : new Date();
+	var msgString = '<span>{' + data.channel + '@' + timestamp.toLocaleTimeString() + '} [' + data.author + '] ' + data.text + '</span><br/>';
 	jQuery('#messages').append(msgString);
 };
 
@@ -105,6 +89,8 @@ function setupSocket() {
 		var testSocket = new Socket(codeTest.config.server, { autoReconnect: true });
 		testSocket.on('reconnect', function(msg, e) {
 			console.log('reconnected');
+      setNick()
+      joinChannel()
 		});
 		testSocket.on('close', function(e) {
 			console.log('[close]');
@@ -117,12 +103,13 @@ function setupSocket() {
 		testSocket.on('open', function(e) {
 			jQuery('#wsstatus').text(Date.now() + ' connection open');
 			console.log('[open]');
-			testSocket.on('message', function(msg, e) {
-				console.log('[message]');
-				console.log(msg);
+      setNick()
+      joinChannel()
+		});
+    testSocket.on('message', function(msg) {
+				console.log('[message]', msg);
 				handleMessageFromServer(msg);
 			});
-		});
 		jQuery('#wsstatus').text(Date.now() + ' connecting to [' + codeTest.config.server + ']');
 	} catch(err) {
 		jQuery('#wsstatus').text(Date.now() + ' connection failed: ' + err);
