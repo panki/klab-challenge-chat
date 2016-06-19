@@ -8,15 +8,15 @@ html
     script(type='text/javascript', src='public/client.js')
   body
     div
-      input#serverUrl(value="127.0.0.1:3000")
+      input#serverUrl
       button#connect Connect
     br
     #messages(style="height:300px; overflow:auto")
     br
     #setup
-      input#nickname(value="person1")
+      input#nickname
       button#setNick Set nickname
-      input#channel(value="defaultChannel")
+      input#channel
       button#joinChannel Join
     br
     #sender

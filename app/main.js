@@ -3,7 +3,7 @@ import logger from 'morgan'
 import path from 'path'
 
 import routes from './routes'
-import websocketServer from './ws'
+import websocketServer from './websocket/server'
 
 const app = express()
 

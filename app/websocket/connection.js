@@ -5,7 +5,10 @@ class ConnectionWrapper extends EventEmitter {
     super()
     this.connection = connection
     this.codec = codec
+    // wrap message event
     this.connection.on('message', (msg) => this.emit('message', this.codec.unpack(msg.utf8Data)))
+    // proxy all other events
+    this.connection.on('error', (error) => this.emit('error', error))
     this.connection.on('close', (code, description) => this.emit('close', code, description))
   }
 
