@@ -1,24 +1,44 @@
 import util from 'util'
 import {CMD_MESSAGE, CMD_JOIN_CHANNEL, CMD_SET_NICK,
-  messageCommand, sysMessageCommand, sysMessage} from './commands'
+  messageCommand, sysMessageCommand, sysMessage, message} from './commands'
 
+/**
+ * Client class.
+ * Uses actor model to serve connected client. Once instantiated with *connection* and *messenger*,
+ * it transfers messages from messenger to connection, and handles actions sent from user via
+ * *connection*.
+ */
 class Client {
-
+  /**
+   * Class constructor
+   * @param connection {object} - websocket connection
+   * @param messenger {object} - messenger instance
+   */
   constructor (connection, messenger) {
     this.connection = connection
     this.messenger = messenger
     this.channel = this.nick = undefined
+    // Prepare callbacks for later use
     this.stopHandler = this.stop.bind(this)
     this.clientActionHandler = this.onClientAction.bind(this)
     this.messangerHandler = this.onMessengerMessage.bind(this)
   }
 
+  /**
+   * Start serving.
+   * Binds to connection events.
+   */
   start () {
     this.connection.on('message', this.clientActionHandler)
     this.connection.on('close', this.stopHandler)
     this.notify('Welcome to the test')
   }
 
+  /**
+   * Stop serving.
+   * Unbinds from all events and closes connection.
+   * My be called directly and on connection close event.
+   */
   stop () {
     this.notifyChannel(`${this.nick} disconnected`)
     this.unsubscribe()
@@ -27,6 +47,10 @@ class Client {
     this.connection.close()
   }
 
+  /**
+   * Subscribes to messenger channel.
+   * @param channel {string} - channel name to subscribe
+   */
   subscribe (channel) {
     if (channel !== this.channel) {
       this.unsubscribe()
@@ -37,6 +61,9 @@ class Client {
     }
   }
 
+  /**
+   * Cancels current channel subscription
+   */
   unsubscribe () {
     if (this.channel !== undefined) {
       this.notifyChannel(`${this.nick} has left channel ${this.channel}`)
@@ -44,14 +71,27 @@ class Client {
     }
   }
 
+  /**
+   * Notifies user, sends message directly to user
+   * not using messenger
+   * @param text {string} - text to send
+   */
   notify (text) {
     this.connection.send(sysMessageCommand(this.channel, text))
   }
 
+  /**
+   * Notifies all people in channel via messenger.
+   * @param text {string} - text to send
+   */
   notifyChannel (text) {
     this.messenger.notify(sysMessage(this.channel, text))
   }
 
+  /**
+   * Messenger new message handler.
+   * @param message {object} - message
+   */
   onMessengerMessage (message) {
     this.connection.send(messageCommand(
       message.author,
@@ -61,11 +101,15 @@ class Client {
     ))
   }
 
+  /**
+   * Handles client actions
+   * @param msg {object} - message from connection with command and action properties
+   */
   onClientAction (msg) {
     const {command, data} = msg.action
     switch (command) {
       case CMD_MESSAGE:
-        this.messenger.send(data)
+        this.messenger.send(message(data.author, data.channel, data.text))
         break
       case CMD_JOIN_CHANNEL:
         this.subscribe(data.channel)
@@ -78,6 +122,10 @@ class Client {
     }
   }
 
+  /**
+   * Change client nick
+   * @param value {string} - new nickname
+   */
   setNick (value) {
     if (this.nick !== value) {
       this.notify(`Greetings ${value}!`)

@@ -1,6 +1,16 @@
 import EventEmitter from 'events'
 
+/**
+ * Websocket connection wrapper class.
+ * Exposes underlying connection methods and events, so it works
+ * like original connection but with serialization.
+ */
 class ConnectionWrapper extends EventEmitter {
+  /**
+   * Class constructor
+   * @param connection {object}- original websocket connection
+   * @param codec {object} - codec to encode/decode transferred messages
+   */
   constructor (connection, codec) {
     super()
     this.connection = connection
@@ -18,11 +28,6 @@ class ConnectionWrapper extends EventEmitter {
 
   close () {
     this.connection.close()
-  }
-
-  removeListener (event, cb) {
-    super.removeListener(event, cb)
-    this.connection.removeListener(event, cb)
   }
 }
 

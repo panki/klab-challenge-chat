@@ -3,9 +3,35 @@ import Redis from 'ioredis'
 import {JsonCodec} from './codec'
 import config from './config'
 
+// Redis key to pub/sub between nodes
 const MESSAGE_BUS = 'messages'
 
+/**
+ * Redis message store.
+ * Encapsulates all low level redis interaction, and exposes simple to use api:
+ *
+ * put(msg) - to store message and publish to other nodes
+ * publish(msg) - to publish message without storing it
+ * getLastMessages(channel, n) - read last n messages from channel
+ *
+ * Storing details:
+ *
+ * Uses redis pub/sub to communicate with other nodes.
+ * Uses redis lists to store channel messages.
+ *
+ * Expiration details:
+ *
+ * Messages are deleted only when deleted the channel that holds them.
+ * Each time when message added to channel, channel expiration time changed to max expiration
+ * time from options. When we read messages from channel, messages that have expired are filtered.
+ */
 class RedisStore extends EventEmitter {
+  /**
+   * Class constructor
+   * @param redis {object} - redis instance, creates one if omitted
+   * @param codec {object} - codec to pack/unpack messages, default is json
+   * @param options {object} - options, if omitted will be used config
+   */
   constructor (redis, codec, options) {
     super()
     this.redis = redis || new Redis(config.redis)
@@ -25,6 +51,11 @@ class RedisStore extends EventEmitter {
     })
   }
 
+  /**
+   * Store and send message to other nodes
+   * @param message {object}
+   * @returns promise {object}
+   */
   put (message) {
     const key = this.prefixChannel(message.channel)
     const msg = this.codec.pack(message)
@@ -42,11 +73,22 @@ class RedisStore extends EventEmitter {
       .exec()
   }
 
+  /**
+   * Sends message to other nodes without storing it
+   * @param message {object}
+   * @returns promise {object}
+   */
   publish (message) {
     const value = this.codec.pack(message)
     return this.redis.publish(MESSAGE_BUS, value)
   }
 
+  /**
+   * Returns last N messages from specified channel
+   * @param channel {string}
+   * @param n {int} - number of messages
+   * @returns promise {object} - will be resolved with array of messages
+   */
   getLastMessages (channel, n) {
     const key = this.prefixChannel(channel)
     // Unix utc timestamp in milliseconds, because message timestamp
