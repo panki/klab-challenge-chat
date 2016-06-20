@@ -29,7 +29,7 @@ class Messenger {
   subscribe (channel, cb) {
     const event = this.prefixChannel(channel)
     this.subscriptions.on(event, cb)
-    this.store
+    return this.store
       .getLastMessages(channel, this.options.channel_history_size)
       .then(messages => messages.forEach(m => cb(m)))
   }
