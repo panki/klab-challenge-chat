@@ -20,6 +20,7 @@
   "homepage": "https://github.com/panki/klab-challenge-chat#readme",
   "dependencies": {
     "express": "^4.14.0",
+    "http-shutdown": "^1.0.3",
     "ioredis": "^2.0.1",
     "jade": "^1.11.0",
     "morgan": "^1.7.0",
