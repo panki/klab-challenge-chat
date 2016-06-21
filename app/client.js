@@ -68,6 +68,7 @@ class Client {
     if (this.channel !== undefined) {
       this.notifyChannel(`${this.nick} has left channel ${this.channel}`)
       this.messenger.unsubscribe(this.channel, this.messangerHandler)
+      this.channel = undefined
     }
   }
 

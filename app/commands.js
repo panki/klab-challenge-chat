@@ -31,3 +31,11 @@ export function messageCommand (author, channel, text, timestamp) {
 export function sysMessageCommand (channel, text) {
   return messageCommand('system', channel || 'system', text)
 }
+
+export function setNickCommand (nick) {
+  return createCommand(CMD_SET_NICK, { nick: nick })
+}
+
+export function joinChannelCommand (channel) {
+  return createCommand(CMD_JOIN_CHANNEL, { channel: channel })
+}

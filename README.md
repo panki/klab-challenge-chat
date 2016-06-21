@@ -37,9 +37,6 @@ Simply add new nodes to docker-composer.yml.
 ## To be done
 
 - Error handling
-- Tests
-- Graceful shutdown
-
 
 
 
