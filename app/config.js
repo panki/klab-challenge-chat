@@ -11,7 +11,7 @@ const config = {
   messenger: {
     // The number of messages sent to the client
     // when joining to channel
-    channel_history_size: 3
+    channel_history_size: 10
   }
 }
 
