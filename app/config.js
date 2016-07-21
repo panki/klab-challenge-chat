@@ -1,6 +1,6 @@
 const config = {
   redis: {
-    host: 'redis',
+    host: process.env.REDIS_HOST || 'redis',
     port: 6379,
     db: 0
   },
